@@ -10,6 +10,7 @@ import os
 # 从环境变量中获取 Telegram Bot Token 和 Chat ID
 TELEGRAM_BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
 TELEGRAM_CHAT_ID = os.getenv('TELEGRAM_CHAT_ID')
+SCKEY = os.getenv('SCKEY')
 
 def format_to_iso(date):
     return date.strftime('%Y-%m-%d %H:%M:%S')
@@ -101,6 +102,7 @@ async def main():
         
     message += f'所有{serviceName}账号登录完成！'
     await send_telegram_message(message)
+    await push_sct( message) #发送消息到 酱推
     print(f'所有{serviceName}账号登录完成！')
 
 async def send_telegram_message(message):
@@ -128,6 +130,19 @@ async def send_telegram_message(message):
             print(f"发送消息到Telegram失败: {response.text}")
     except Exception as e:
         print(f"发送消息到Telegram时出错: {e}")
+
+async def push_sct(content):
+    now_utc = date_format(datetime.utcnow())
+    now_bj = date_format(datetime.utcnow() + timedelta(hours=8))
+    content_with_timestamp = f"{now_bj}(UTC {now_utc}): {content}"
+    url = "https://sctapi.ftqq.com/{}.send?title={}&desp={}".format(SCKEY, 'serv00登录', content_with_timestamp)
+    response = requests.post(url)
+    if response.status_code == 200:
+        return True
+    else:
+        return False
+
+
 
 if __name__ == '__main__':
     asyncio.run(main())
